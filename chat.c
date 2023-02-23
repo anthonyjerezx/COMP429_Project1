@@ -1,43 +1,49 @@
-// Server side 
-#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <netinet/in.h>
-#include <net/if.h>
 #include <arpa/inet.h>
+
+#define SERVER_ADDR "172.217.160.99"
+#define SERVER_PORT 80
 
 int main()
 {
-    unsigned char ip_address[15];
-    int fd;
-    struct ifreq ifr;
+    char myIP[16];
+    unsigned int myPort;
+    struct sockaddr_in server_addr, my_addr;
+    int sockfd;
 
-    /*AF_INET - to define network interface IPv4*/
-    /*Creating soket for it.*/
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    // Connect to server
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Can't open stream socket.");
+        exit(-1);
+    }
 
-    /*AF_INET - to define IPv4 Address type.*/
-    ifr.ifr_addr.sa_family = AF_INET;
+    // Set server_addr
+    bzero(&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
+    server_addr.sin_port = htons(SERVER_PORT);
 
-    /*eth0 - define the ifr_name - port name
-    where network attached.*/
-    memcpy(ifr.ifr_name, "eth0", IFNAMSIZ - 1);
+    // Connect to server
+    if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+        perror("Connect server error");
+        close(sockfd);
+        exit(-1);
+    }
 
-    /*Accessing network interface information by
-    passing address using ioctl.*/
-    ioctl(fd, SIOCGIFADDR, &ifr);
-    /*closing fd*/
-    close(fd);
+    // Get my ip address and port
+    bzero(&my_addr, sizeof(my_addr));
+    socklen_t len = sizeof(my_addr);
+    getsockname(sockfd, (struct sockaddr *) &my_addr, &len);
+    inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
+    myPort = ntohs(my_addr.sin_port);
 
-    /*Extract IP Address*/
-    strcpy(ip_address, inet_ntoa(((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr));
-
-    printf("System IP Address is: %s\n", ip_address);
+    printf("Local ip address: %s\n", myIP);
+    printf("Local port : %u\n", myPort);
 
     return 0;
 }
