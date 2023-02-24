@@ -1,7 +1,9 @@
 CC=gcc
 CFLAGS=-I.
-DEPS = chat.c
-OBJ = chat.o
+#place all *.h files 
+DEPS = chat.c server.h
+#place all *.o files 
+OBJ = chat.o server.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
