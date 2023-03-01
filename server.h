@@ -11,6 +11,6 @@
 
 #define SERVER_PORT 80 
 #define SERVER_ADDR "172.217.160.99"
-void GetMyIp(); 
+void GetMyIp( ); 
 
 #endif // SERVER_H

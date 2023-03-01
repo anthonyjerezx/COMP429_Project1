@@ -30,7 +30,6 @@ int main(int argc, char const *argv[])
     pthread_t server_thread; 
     int iret = pthread_create(&server_thread, NULL, server_func, NULL);
     printf("%d \n", iret);
-    pthread_join(server_thread, NULL);
 
 
     // loop for the client 
@@ -75,7 +74,7 @@ int main(int argc, char const *argv[])
             printf("Terminate \n");
             break;
         case 's':
-            printf("enter your message: \n");
+            printf("enter your message: ");
             //clear out the message every time
             memset(message, 0, 255);
             fgets(message, 255, stdin);
