@@ -1,9 +1,17 @@
 #include "server.h"
 #include <stdlib.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #define SERVER_ADDR "172.217.160.99"
 #define SERVER_PORT 80
 
 int port;
+
+void *server_func(void *arg){
+    printf("server func ran \n");
+}
 
 int main(int argc, char const *argv[])
 {
@@ -19,11 +27,18 @@ int main(int argc, char const *argv[])
     }
 
     /* create thread for server/socket on the machine to listen */
+    pthread_t server_thread; 
+    int iret = pthread_create(&server_thread, NULL, server_func, NULL);
+    printf("%d \n", iret);
+    pthread_join(server_thread, NULL);
 
+
+    // loop for the client 
+    char message[255];
     while (1)
     {
         printf(">: ");
-        scanf("%s", cmd);
+        fgets(cmd,16,stdin);
 
 /*      printf("cmd is: %s \n", cmd);
         printf("cmd[0] = %c \n", cmd[0]); */
@@ -41,7 +56,8 @@ int main(int argc, char const *argv[])
             printf("connect: \n");
             printf("terminate: \n");
             printf("send: \n");
-            printf("exit \n");
+            printf("exit: leave the program \n");
+            printf("\n\n");
             break;
         case 'i':
             GetMyIp();
@@ -57,8 +73,14 @@ int main(int argc, char const *argv[])
             break;
         case't':
             printf("Terminate \n");
+            break;
         case 's':
-            printf("send\n");
+            printf("enter your message: \n");
+            //clear out the message every time
+            memset(message, 0, 255);
+            fgets(message, 255, stdin);
+            printf("your message: %s \n ",message);
+            break;
         case 'e':
             exit(0);
         default:
