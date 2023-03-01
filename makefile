@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-I.
+CFLAGS=-lpthread
 #place all *.h files 
-DEPS = chat.c server.h
+DEPS =  server.h chat.c 
 #place all *.o files 
 OBJ = chat.o server.o
 
