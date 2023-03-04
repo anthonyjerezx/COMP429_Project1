@@ -14,4 +14,4 @@ chat: $(OBJ)
 .PHONY: clean
 
 clean:
-	rm  *.o 
+	rm  *.o chat

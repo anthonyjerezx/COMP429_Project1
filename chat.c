@@ -9,36 +9,27 @@
 
 int port;
 char cmd[16];
-struct sockaddr_in cli_addr;
 int sock;
-struct sockaddr_in self_addr;
-struct sockaddr_in peer_list[100];
+int clientfds[10];
+
+struct sockaddr_in mySockaddr; 
+pthread_mutex_t io_lock, stdin_lock;
 
 void print_help();
 
-void *server_func(void *arg)
-{
-    //printf("server init \n");
-    struct sockaddr_in serv_addr;
-    int socketfd;
-    if (socketfd = socket(AF_INET, SOCK_STREAM, 0) < 0)
-    {
-        perror("failed to init");
-    }
-    //printf("socket successfully made\n");
-    
-    //flushes out the server address
-     bzero((char *) &serv_addr, sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(port);
+void *server_func(void *arg){
+    int *server_fd = (int*)arg;
     while (1)
     {
+        if(listen(*server_fd,10)<0){
+            perror("falied to listen");
+            pthread_cancel(pthread_self());
+        }
         sleep(5);
-        printf("server running in the background\n");
+        pthread_mutex_lock(&io_lock);
+        printf("listening for connections . . .\n");
+        pthread_mutex_unlock(&io_lock);
     }
-    
 }
 
 int main(int argc, char const *argv[])
@@ -48,7 +39,7 @@ int main(int argc, char const *argv[])
     pthread_t server_thread;
     int iret;
     char message[255];
-
+    int listener_fd; 
 
     /* handle port assignment from cmdline */
     if (argc < 2)
@@ -60,24 +51,26 @@ int main(int argc, char const *argv[])
         port = atoi(argv[1]);
     }
 
+    // create a socket to listen on 
+    listener_fd = socket(AF_INET,SOCK_STREAM,0);
+    if(listener_fd < 0)
+        perror("failed to make a socket");
 
+    mySockaddr.sin_family = AF_INET; 
+    mySockaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    mySockaddr.sin_port = port; 
+    printf("socket generated \n");
     /* create thread for server/socket on the machine to listen */
+    if(bind(listener_fd, (struct sockaddr*)&mySockaddr, sizeof(mySockaddr))<0)
+        perror("failed to bind");
     
-   
-    if (iret = pthread_create(&server_thread, NULL, server_func, NULL) != 0)
-    {
-        perror("thread failed to start \n");
-    }
-    printf("thread succesfully made \n");
-    pthread_join(server_thread, NULL);
-     // print_help();
-    // loop for the client
+    pthread_create(&server_thread, NULL, server_func, (void *)&listener_fd); 
     
     while (1)
     {
+        print_help();
         printf(">: ");
         fgets(cmd, 16, stdin);
-
         // strip the first letter from the cmd input and use it for the switch
         switch (cmd[0])
         {
