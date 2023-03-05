@@ -1,9 +1,9 @@
 CC=gcc
 CFLAGS=-lpthread
 #place all *.h files 
-DEPS =  server.h chat.c 
+DEPS =  utils.h chat.c 
 #place all *.o files 
-OBJ = chat.o server.o
+OBJ = chat.o utils.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

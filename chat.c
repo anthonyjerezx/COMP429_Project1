@@ -6,10 +6,14 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
+#include "utils.h"
+
+#define MESSAGE_LEN 256 
+
 int port;
 char cmd[16];
 int sock;
-int clientfds[10];
+int peers_fds[10];
 
 struct sockaddr_in mySockaddr;
 pthread_mutex_t io_lock, stdin_lock;
@@ -22,7 +26,9 @@ void *server_func(void *arg)
     int peer_fd;
     socklen_t addr_size;
     struct sockaddr_storage their_addr;
+    // peer ip and peer message
     char pip[32];
+    char pm[MESSAGE_LEN];
 
     while (1)
     {
@@ -34,13 +40,16 @@ void *server_func(void *arg)
 
         addr_size = sizeof their_addr;
         if (peer_fd = accept(*server_fd, (struct sockaddr *)&their_addr, (unsigned int *)sizeof &addr_size) < 0)
-            ;
-        perror("failed to accept");
+            perror("failed to accept");
+        memset(pm, 0, MESSAGE_LEN);
+        write(peer_fd,pm, MESSAGE_LEN);
+        printf("%s \n",pm);    
         inet_ntop(AF_INET, &their_addr, pip, 32);
+        close(peer_fd);
     }
 }
 
-req_connect()
+void req_connect()
 {
     // request connection ip
     char rcip[32];
@@ -49,7 +58,7 @@ req_connect()
     printf("connect\n");
     printf("enter the ip : ");
     fgets(rcip, 32, stdin);
-    printf("enter the port you wish to coonect on: ");
+    printf("enter the port you wish to conect on: ");
     char temp[32];
     fgets(temp, 32, stdin);
     rcpn = atoi(temp);
@@ -63,6 +72,11 @@ int main(int argc, char const *argv[])
     int iret;
     char message[255];
     int my_fd;
+    char hostIP[16];
+    returnIP(hostIP);
+    uint32_t hip; 
+    inet_pton(AF_INET, hostIP, &hip);
+    printf("value of hostIP %s %ul\n", hostIP,hip);
 
     /* handle port assignment from cmdline */
     if (argc < 2)
@@ -80,7 +94,7 @@ int main(int argc, char const *argv[])
         perror("failed to make a socket");
 
     mySockaddr.sin_family = AF_INET;
-    mySockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    mySockaddr.sin_addr.s_addr = htonl(hip);
     mySockaddr.sin_port = port;
     printf("socket generated \n");
     /* create thread for server/socket on the machine to listen */
@@ -101,7 +115,6 @@ int main(int argc, char const *argv[])
             print_help();
             break;
         case 'i':
-            GetMyIp();
             break;
         case 'p':
             printf("you're port#: %d \n", port);
