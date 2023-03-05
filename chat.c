@@ -20,50 +20,9 @@ pthread_mutex_t io_lock, stdin_lock;
 
 void print_help();
 
-void *server_func(void *arg)
-{
-    int *server_fd = (int *)arg;
-    int peer_fd;
-    socklen_t addr_size;
-    struct sockaddr_storage their_addr;
-    // peer ip and peer message
-    char pip[32];
-    char pm[MESSAGE_LEN];
+void *server_func(void *arg);
 
-    while (1)
-    {
-        if (listen(*server_fd, 10) < 0)
-        {
-            perror("falied to listen");
-            pthread_cancel(pthread_self());
-        }
-
-        addr_size = sizeof their_addr;
-        if (peer_fd = accept(*server_fd, (struct sockaddr *)&their_addr, (unsigned int *)sizeof &addr_size) < 0)
-            perror("failed to accept");
-        memset(pm, 0, MESSAGE_LEN);
-        write(peer_fd,pm, MESSAGE_LEN);
-        printf("%s \n",pm);    
-        inet_ntop(AF_INET, &their_addr, pip, 32);
-        close(peer_fd);
-    }
-}
-
-void req_connect()
-{
-    // request connection ip
-    char rcip[32];
-    // request connection port number
-    int rcpn;
-    printf("connect\n");
-    printf("enter the ip : ");
-    fgets(rcip, 32, stdin);
-    printf("enter the port you wish to conect on: ");
-    char temp[32];
-    fgets(temp, 32, stdin);
-    rcpn = atoi(temp);
-    printf("connect call args: %s %d", rcip, rcpn);
-}
+void req_connect();
 
 int main(int argc, char const *argv[])
 {
@@ -159,4 +118,50 @@ void print_help()
     printf("send: \n");
     printf("exit: leave the program \n");
     printf("\n\n");
+}
+
+
+void *server_func(void *arg)
+{
+    int *server_fd = (int *)arg;
+    int peer_fd;
+    socklen_t addr_size;
+    struct sockaddr_storage their_addr;
+    // peer ip and peer message
+    char pip[32];
+    char pm[MESSAGE_LEN];
+
+    while (1)
+    {
+        if (listen(*server_fd, 10) < 0)
+        {
+            perror("falied to listen");
+            pthread_cancel(pthread_self());
+        }
+
+        addr_size = sizeof their_addr;
+        if (peer_fd = accept(*server_fd, (struct sockaddr *)&their_addr, (unsigned int *)sizeof &addr_size) < 0)
+            perror("failed to accept");
+        memset(pm, 0, MESSAGE_LEN);
+        read(peer_fd,pm, MESSAGE_LEN);
+        printf("%s \n",pm);    
+        inet_ntop(AF_INET, &their_addr, pip, 32);
+        close(peer_fd);
+    }
+}
+
+void req_connect()
+{
+    // request connection ip
+    char rcip[32];
+    // request connection port number
+    int rcpn;
+    printf("connect\n");
+    printf("enter the ip : ");
+    fgets(rcip, 32, stdin);
+    printf("enter the port you wish to conect on: ");
+    char temp[32];
+    fgets(temp, 32, stdin);
+    rcpn = atoi(temp);
+    printf("connect call args: %s %d", rcip, rcpn);
 }
