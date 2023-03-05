@@ -1,4 +1,3 @@
-#include "server.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/types.h>
@@ -29,7 +28,6 @@ int main(int argc, char const *argv[])
 
     pthread_t server_thread;
     int iret;
-    char message[255];
     int my_fd;
     char hostIP[16];
     returnIP(hostIP);
@@ -54,12 +52,13 @@ int main(int argc, char const *argv[])
 
     mySockaddr.sin_family = AF_INET;
     mySockaddr.sin_addr.s_addr = htonl(hip);
-    mySockaddr.sin_port = port;
+    mySockaddr.sin_port = htons(port);
     printf("socket generated \n");
-    /* create thread for server/socket on the machine to listen */
+
     if (bind(my_fd, (struct sockaddr *)&mySockaddr, sizeof(mySockaddr)) < 0)
         perror("failed to bind");
 
+    /* create thread for server/socket on the machine to listen */
     pthread_create(&server_thread, NULL, server_func, (void *)&my_fd);
 
     while (1)
@@ -89,11 +88,6 @@ int main(int argc, char const *argv[])
             break;
         case 's':
             printf("enter your message: ");
-            // clear out the message every time
-            memset(message, 0, 255);
-            fgets(message, 255, stdin);
-            printf("your message: %s \n ", message);
-            break;
         case 'e':
             exit(0);
         default:
@@ -152,16 +146,45 @@ void *server_func(void *arg)
 
 void req_connect()
 {
-    // request connection ip
-    char rcip[32];
-    // request connection port number
-    int rcpn;
+    
+    char rcip[32]; // request connection ip
+    int rcpn; // request connection port number 
+    uint32_t req_ip;
+    struct sockaddr_in req_addr; 
+    int req_fd = socket(AF_INET, SOCK_STREAM,0);
+    char message[MESSAGE_LEN];
+    char temp[16];
+
+    // get user input about who you want to send it to
     printf("connect\n");
     printf("enter the ip : ");
-    fgets(rcip, 32, stdin);
+    fgets(rcip, 16, stdin);
     printf("enter the port you wish to conect on: ");
-    char temp[32];
-    fgets(temp, 32, stdin);
-    rcpn = atoi(temp);
-    printf("connect call args: %s %d", rcip, rcpn);
+    fgets(temp, 16, stdin);
+    rcpn = htons(atoi(temp));
+    inet_pton(AF_INET, rcip, &req_ip);
+    printf("here \n");
+
+    //fill in the struct sockaddr
+    req_addr.sin_family=AF_INET;
+    req_addr.sin_port = rcpn;
+    req_addr.sin_addr.s_addr = htonl(req_ip);
+
+    //make a connection; someone call me tonight
+    int connect_status = connect(req_fd, (struct sockaddr *)&req_addr,sizeof(req_addr));
+    printf(" connection status: %d \n",connect_status);  
+    if (connect_status < 0)
+    {
+        perror("connection unsuccesful \n");
+        exit(1);
+    }
+
+    printf("connection successful \n");
+    printf("enter the message you wish to send: ");
+    memset(message,0, MESSAGE_LEN);
+    fgets(message, MESSAGE_LEN,stdin);
+
+    send(req_fd, message,MESSAGE_LEN,0);
+    close(req_fd);
+
 }
